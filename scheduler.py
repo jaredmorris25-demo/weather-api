@@ -16,6 +16,15 @@ import schedule
 import time
 import requests
 from datetime import datetime
+import logging
+
+# Set up file logging
+logging.basicConfig(
+    filename='scheduler.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 API_BASE_URL = "http://localhost:8000"  # URL of your FastAPI app
 CITIES_TO_FETCH = [
@@ -68,6 +77,7 @@ def fetch_all_cities():
     """
     batch_start = datetime.now()
 
+    logger.info(f"Starting batch: {len(CITIES_TO_FETCH)} cities")
     print("\n" + "="*60)
     print(f"Starting scheduled weather fetch at {datetime.now()}")
     print("="*60)
@@ -79,19 +89,24 @@ def fetch_all_cities():
     for city_config in CITIES_TO_FETCH:
         if fetch_weather_for_cities(city_config['city'], city_config['country_code']):
             success_count += 1
+            logger.info(f"Successfully fetched weather for {city_config['city']}, {city_config['country_code']}")
         else:
             fail_count += 1
+            error_messages.append(f"Failed to fetch {city_config['city']}, {city_config['country_code']}")
+            logger.error(f"Failed to fetch weather for {city_config['city']}, {city_config['country_code']}")
             
         # Small delay between requests to avoid overwhelming the API
-        time.sleep(2)
+        time.sleep(2)    
 
     batch_end = datetime.now()
     duration = (batch_end - batch_start).total_seconds()
 
+    logger.info(f"Batch complete: {success_count} successful, {fail_count} failed, duration: {duration:.2f} seconds")
+
     print(f"\nBatch complete: {success_count} successful, {fail_count} failed")
     print(f"Duration: {duration:.2f} seconds")
 
-    # Log the batch run to the database
+# Try to log to database (might fail if API is down)
     try:
         log_url = f"{API_BASE_URL}/batch/log"
         log_data = {
@@ -107,10 +122,12 @@ def fetch_all_cities():
         response = requests.post(log_url, params=log_data)
         response.raise_for_status()
         print(f"✅ Batch run logged to database")
+        logger.info("Batch logged to database successfully")
         
     except Exception as e:
         print(f"⚠️  Warning: Could not log batch run to database: {e}")
-
+        logger.warning(f"Could not log to database: {e}")
+        
     print("="*60 + "\n")
 
 
