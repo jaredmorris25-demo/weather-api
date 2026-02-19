@@ -1,10 +1,10 @@
 # Weather Data API
 
 A FastAPI-based weather data aggregation service that demonstrates:
-- REST API development
-- External API integration
-- Database storage (Bronze layer)
-- Version control with Git
+    - REST API development
+    - External API integration
+    - Database storage (Bronze layer)
+    - Version control with Git
 
 ## SETUP
 
@@ -24,6 +24,12 @@ A FastAPI-based weather data aggregation service that demonstrates:
 
 ## Endpoints
 
-- 'POST /weather/fetch/{city}' - Fetch and store weather data
-- 'GET /weather/history/{city} - Get all recrords for a city
-- 'GET /weather/latest/{city} - Get most recent record for a city
+    - 'POST /weather/fetch/{city}' - Fetch and store weather data
+    - 'GET /weather/history/{city} - Get all recrords for a city
+    - 'GET /weather/latest/{city} - Get most recent record for a city
+
+## Current Status
+
+   - ✅ Basic CRUD API working
+   - ✅ Connected to OpenWeatherMap
+   - 🚧 Next: Add scheduling and Silver layer transformations
