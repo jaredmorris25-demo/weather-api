@@ -25,3 +25,24 @@ class WeatherRecord(Base):
 
     def __repr__(self):
         return f"<WeatherRecord(city_name='{self.city}', temperature={self.temperature}, humidity={self.humidity}, description='{self.description}', wind_speed={self.wind_speed}, timestamp='{self.timestamp}')>"
+    
+class BatchLog(Base):
+    """
+    Tracks scheduler batch runs - successes, failures, timing.
+
+    In production, this is your "job run history" or "pipeline execution log".
+    Critical for debugging: "Why did last night's data load fail?"
+    """
+    __tablename__ = "batch_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    batch_start_time = Column(DateTime)
+    batch_end_time = Column(DateTime)
+    cities_attempted = Column(Integer)       # How many cities we tried
+    cities_successful = Column(Integer)      # How many succeeded
+    cities_failed = Column(Integer)          # How many failed
+    error_message = Column(String, nullable=True)  # Any errors encountered
+    duration_seconds = Column(Float)         # How long the batch took
+
+    def __repr__(self):
+        return f"<BatchLog(start={self.batch_start_time}, success={self.cities_successful}/{self.cities_attempted})>"

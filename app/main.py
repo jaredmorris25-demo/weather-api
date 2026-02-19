@@ -7,6 +7,8 @@ from .database import get_db
 from .models import WeatherRecord
 from .weather_client import WeatherClient
 
+from .models import BatchLog
+
 app = FastAPI(
     title="Weather API", 
     description="A simple API to fetch and store weather data for cities.",
@@ -176,4 +178,76 @@ def delete_weather_record(record_id: int, db: Session = Depends(get_db)):
     return {
         "message": "Record deleted successfully",
         "deleted_record": deleted_info
+    }
+
+@app.post("/batch/log")
+def log_batch_run(
+    batch_start: str,
+    batch_end: str,
+    cities_attempted: int,
+    cities_successful: int,
+    cities_failed: int,
+    duration_seconds: float,
+    error_message: str = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Log a batch run to the database.
+    
+    In production, every ETL job logs its execution:
+    - When did it start/end?
+    - Did it succeed?
+    - How much data was processed?
+    - Any errors?
+    
+    This is how you debug production issues at 2am.
+    """
+    log_entry = BatchLog(
+        batch_start_time=datetime.fromisoformat(batch_start),
+        batch_end_time=datetime.fromisoformat(batch_end),
+        cities_attempted=cities_attempted,
+        cities_successful=cities_successful,
+        cities_failed=cities_failed,
+        duration_seconds=duration_seconds,
+        error_message=error_message
+    )
+    
+    db.add(log_entry)
+    db.commit()
+    db.refresh(log_entry)
+    
+    return {
+        "message": "Batch run logged successfully",
+        "log_id": log_entry.id
+    }
+
+
+@app.get("/batch/history")
+def get_batch_history(limit: int = 10, db: Session = Depends(get_db)):
+    """
+    View recent batch run history.
+    
+    In production, this powers your monitoring dashboards:
+    "Show me the last 24 hours of job runs"
+    """
+    logs = db.query(BatchLog)\
+        .order_by(BatchLog.batch_start_time.desc())\
+        .limit(limit)\
+        .all()
+    
+    return {
+        "total_batches": len(logs),
+        "batches": [
+            {
+                "id": log.id,
+                "start_time": log.batch_start_time,
+                "end_time": log.batch_end_time,
+                "duration_seconds": log.duration_seconds,
+                "attempted": log.cities_attempted,
+                "successful": log.cities_successful,
+                "failed": log.cities_failed,
+                "error": log.error_message
+            }
+            for log in logs
+        ]
     }

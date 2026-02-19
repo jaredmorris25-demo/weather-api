@@ -28,6 +28,7 @@ CITIES_TO_FETCH = [
 
 FETCH_INTERVAL_MINUTES = 20  # Fetch every 20 minutes
 
+
 def fetch_weather_for_cities(city: str, country_code: str   ):
     """
     Fetch weather data for a single city.
@@ -60,21 +61,20 @@ def fetch_weather_for_cities(city: str, country_code: str   ):
         print(f"  ❌ Unexpected error while fetching weather for {city}, {country_code}: {e}")
         return False
     
+
 def fetch_all_cities():
     """
-    Fetch weather for all configured cities.
-
-    This is your "job" or "task" that runs on a schedule.
-    In Databricks, this would be a notebook.
-    In Azure Data Factory, this would be a pipeline.
-
+    Fetch weather for all configured cities and log the batch run.
     """
+    batch_start = datetime.now()
+
     print("\n" + "="*60)
     print(f"Starting scheduled weather fetch at {datetime.now()}")
     print("="*60)
 
     success_count = 0
     fail_count = 0
+    error_messages = []
 
     for city_config in CITIES_TO_FETCH:
         if fetch_weather_for_cities(city_config['city'], city_config['country_code']):
@@ -85,7 +85,32 @@ def fetch_all_cities():
         # Small delay between requests to avoid overwhelming the API
         time.sleep(2)
 
-    print(f"\nBatch complete: {success_count} successes, {fail_count} failures at {datetime.now()}")
+    batch_end = datetime.now()
+    duration = (batch_end - batch_start).total_seconds()
+
+    print(f"\nBatch complete: {success_count} successful, {fail_count} failed")
+    print(f"Duration: {duration:.2f} seconds")
+
+    # Log the batch run to the database
+    try:
+        log_url = f"{API_BASE_URL}/batch/log"
+        log_data = {
+            "batch_start": batch_start.isoformat(),
+            "batch_end": batch_end.isoformat(),
+            "cities_attempted": len(CITIES_TO_FETCH),
+            "cities_successful": success_count,
+            "cities_failed": fail_count,
+            "duration_seconds": duration,
+            "error_message": "; ".join(error_messages) if error_messages else None
+        }
+        
+        response = requests.post(log_url, params=log_data)
+        response.raise_for_status()
+        print(f"✅ Batch run logged to database")
+        
+    except Exception as e:
+        print(f"⚠️  Warning: Could not log batch run to database: {e}")
+
     print("="*60 + "\n")
 
 
