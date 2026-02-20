@@ -46,3 +46,60 @@ class BatchLog(Base):
 
     def __repr__(self):
         return f"<BatchLog(start={self.batch_start_time}, success={self.cities_successful}/{self.cities_attempted})>"
+    
+class WeatherRecordSilver(Base):
+    """
+    Silver layer: Cleaned and validated weather data.
+    
+    Transformations from Bronze:
+    - Deduplicated (one record per city per hour)
+    - Data quality checks applied
+    - Suspicious values flagged
+    - Ready for analytics
+    
+    In production, this would be a Delta table in Databricks.
+    """
+    __tablename__ = "weather_records_silver"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    city = Column(String, index=True)
+    country = Column(String)
+    temperature = Column(Float)
+    feels_like = Column(Float)
+    humidity = Column(Integer)
+    description = Column(String)
+    wind_speed = Column(Float)
+    
+    # Silver layer additions
+    timestamp = Column(DateTime, index=True)           # When this reading is for
+    processed_at = Column(DateTime, default=datetime.utcnow)  # When we created this record
+    bronze_record_id = Column(Integer)                 # Link back to bronze source
+    data_quality_flag = Column(String)                 # "valid", "suspect", "invalid"
+    data_quality_notes = Column(String, nullable=True) # Why it was flagged
+    
+    def __repr__(self):
+        return f"<WeatherRecordSilver(city={self.city}, temp={self.temperature}°C, quality={self.data_quality_flag})>"
+    
+class TransformationLog(Base):
+    """
+    Tracks transformation job runs - when they ran, what they processed.
+    
+    This is your "checkpoint" or "high water mark" pattern.
+    Ensures no data is missed even if jobs fail or are down for days.
+    
+    In production, this is how you:
+    - Resume from where you left off
+    - Monitor job health
+    - Debug data pipeline issues
+    """
+    __tablename__ = "transformation_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    transformation_name = Column(String, index=True)  # e.g., "bronze_to_silver"
+    last_processed_timestamp = Column(DateTime)       # Latest Bronze timestamp we processed
+    run_timestamp = Column(DateTime, default=datetime.utcnow)  # When this transform ran
+    records_processed = Column(Integer)               # How many records created
+    status = Column(String)                           # "success" or "failed"
+    
+    def __repr__(self):
+        return f"<TransformationLog({self.transformation_name} @ {self.run_timestamp}: {self.status})>"
