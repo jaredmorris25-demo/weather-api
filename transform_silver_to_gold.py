@@ -56,6 +56,8 @@ def transform_silver_to_gold(days_back: int = 7):
                     'temperatures': [],
                     'humidities': [],
                     'wind_speeds': [],
+                    'pressures': [],
+                    'visibilities': [],
                     'descriptions': [],
                     'total_readings': 0,
                     'valid_readings': 0
@@ -64,6 +66,8 @@ def transform_silver_to_gold(days_back: int = 7):
             grouped_data[key]['temperatures'].append(record.temperature)
             grouped_data[key]['humidities'].append(record.humidity)
             grouped_data[key]['wind_speeds'].append(record.wind_speed)
+            grouped_data[key]['pressures'].append(record.pressure)
+            grouped_data[key]['visibilities'].append(record.visibility)
             grouped_data[key]['descriptions'].append(record.description)
             grouped_data[key]['total_readings'] += 1
             
@@ -118,6 +122,8 @@ def transform_silver_to_gold(days_back: int = 7):
                     max_humidity=max(humids),
                     min_humidity=min(humids),
                     avg_wind_speed=round(sum(winds) / len(winds), 2),           # ROUND HERE
+                    avg_pressure=round(sum(data['pressures']) / len(data['pressures']), 2),  # ROUND HERE
+                    avg_visibility=round(sum(data['visibilities']) / len(data['visibilities']), 2),  # ROUND HERE
                     most_common_description=most_common_desc,
                     total_readings=data['total_readings'],
                     valid_readings=data['valid_readings']

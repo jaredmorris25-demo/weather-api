@@ -22,6 +22,8 @@ class WeatherRecord(Base):
     description = Column(String(255), nullable=False)       # Weather Description
     wind_speed = Column(Float, nullable=False)              # Wind Speed in m/s
     wind_direction = Column(Integer, nullable=True)         # Wind Direction in degrees
+    pressure = Column(Integer)        # NEW FIELD
+    visibility = Column(Integer)      # NEW FIELD
     timestamp = Column(DateTime, default=datetime.utcnow)   # Timestamp of when the data was recorded
 
     def __repr__(self):
@@ -70,6 +72,9 @@ class WeatherRecordSilver(Base):
     humidity = Column(Integer)
     description = Column(String)
     wind_speed = Column(Float)
+    wind_direction = Column(Integer)
+    pressure = Column(Integer)
+    visibility = Column(Integer)
     
     # Silver layer additions
     timestamp = Column(DateTime, index=True)           # When this reading is for
@@ -129,6 +134,8 @@ class WeatherDailyGold(Base):
     max_humidity = Column(Integer)
     min_humidity = Column(Integer)
     avg_wind_speed = Column(DECIMAL(5,2))
+    avg_pressure = Column(DECIMAL(6,2))
+    avg_visibility = Column(DECIMAL(7,2))
     
     # Most common weather condition for the day
     most_common_description = Column(String)
