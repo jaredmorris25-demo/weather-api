@@ -5,6 +5,10 @@ Filters and enriches data for specific analytical use cases.
 Example: Hot, clear days (temp > 30°C and clear sky).
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from datetime import datetime, timedelta
 from app.database import SessionLocal
 from app.models import WeatherRecordSilver, WeatherAnalyticsLayer

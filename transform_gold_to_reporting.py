@@ -4,6 +4,9 @@ Gold to Reporting Mart Transformation
 Pre-aggregates data for fast dashboard queries.
 Grouped by city and day with max/min temp and avg wind speed.
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from datetime import datetime, timedelta
 from app.database import SessionLocal

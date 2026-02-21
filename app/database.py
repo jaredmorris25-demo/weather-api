@@ -1,8 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .models import Base
+import sys
+import os
+
+# Add parent directory to path so we can import config
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import DATABASE_URL
 
+# Use environment-specific database
 engine = create_engine(DATABASE_URL, echo=True)
 
 Base.metadata.create_all(bind=engine)

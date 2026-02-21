@@ -1,15 +1,10 @@
 """
 Bronze to Silver Transformation
-
-This script processes raw weather data (Bronze) into cleaned, validated data (Silver).
-
-In production, this would be:
-- A Databricks notebook running on a schedule
-- An Azure Data Factory data flow
-- A dbt model
-
-The logic is the same: read from Bronze, transform, write to Silver.
 """
+
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func

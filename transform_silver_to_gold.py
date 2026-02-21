@@ -3,6 +3,9 @@ Silver to Gold Transformation
 
 Aggregates hourly Silver data into daily Gold summaries.
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sqlalchemy import func
 from datetime import datetime, timedelta, date
