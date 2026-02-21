@@ -21,3 +21,8 @@ env/
 # IDE
 .vscode/
 .idea/
+
+# Logs (all environments)
+scheduler*.log
+orchestrator*.log
+*.log
