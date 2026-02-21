@@ -17,16 +17,22 @@ import time
 import requests
 from datetime import datetime
 import logging
+from config import get_config
 
-# Set up file logging
+# Get environment-specific settings
+config = get_config()
+API_BASE_URL = f"http://127.0.0.1:{config['api_port']}"
+LOG_FILE = config['log_file']
+
+# Set up file logging with environment-specific log file
 logging.basicConfig(
-    filename='scheduler.log',
+    filename=LOG_FILE,
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-API_BASE_URL = "http://localhost:8000"  # URL of your FastAPI app
+# API_BASE_URL = "http://localhost:8000"  # URL of your FastAPI app
 CITIES_TO_FETCH = [
     {"city": "Brisbane", "country_code": "AU"},
     {"city": "Sydney", "country_code": "AU"},

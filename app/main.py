@@ -59,9 +59,11 @@ def fetch_weather(city: str, country_code: str = "AU", db: Session = Depends(get
         humidity=weather_data['main']['humidity'],
         description=weather_data['weather'][0]['description'],
         wind_speed=weather_data['wind']['speed'],
-        wind_direction=weather_data['wind']['deg']
+        wind_direction=weather_data['wind']['deg'],
+        pressure=weather_data["main"]["pressure"],
+        visibility=weather_data.get("visibility", 0)
     )
-
+    
     # Store the record in the database
     db.add(record)
     db.commit()
