@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Date, Boolean
+from sqlalchemy import DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -103,3 +104,97 @@ class TransformationLog(Base):
     
     def __repr__(self):
         return f"<TransformationLog({self.transformation_name} @ {self.run_timestamp}: {self.status})>"
+    
+class WeatherDailyGold(Base):
+    """
+    Gold layer: Daily weather summaries per city.
+    
+    Business logic applied, aggregated from Silver.
+    Source of truth for daily weather patterns.
+    """
+    __tablename__ = "weather_daily_gold"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    city = Column(String, index=True)
+    country = Column(String)
+    date = Column(Date, index=True)
+    
+    # Temperature aggregations
+    avg_temperature = Column(DECIMAL(5,2))
+    max_temperature = Column(DECIMAL(5,2))
+    min_temperature = Column(DECIMAL(5,2))
+    
+    # Other weather metrics
+    avg_humidity = Column(Integer)
+    max_humidity = Column(Integer)
+    min_humidity = Column(Integer)
+    avg_wind_speed = Column(DECIMAL(5,2))
+    
+    # Most common weather condition for the day
+    most_common_description = Column(String)
+    
+    # Data quality
+    total_readings = Column(Integer)
+    valid_readings = Column(Integer)
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<WeatherDailyGold({self.city}, {self.date}: {self.avg_temperature}°C)>"
+    
+class WeatherAnalyticsLayer(Base):
+    """
+    Analytics Layer: Enriched hourly data for analysis.
+    
+    Filtered and enhanced from Silver for specific analytical use cases.
+    Example: Clear sky days with high temperatures.
+    """
+    __tablename__ = "weather_analytics_layer"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    city = Column(String, index=True)
+    country = Column(String)
+    timestamp = Column(DateTime, index=True)
+    
+    # Core measurements
+    temperature = Column(Float)
+    humidity = Column(Integer)
+    wind_speed = Column(Float)
+    description = Column(String)
+    
+    # Analytical flags
+    is_hot_clear_day = Column(Boolean)  # temp > 30 AND clear sky
+    
+    # Link back to Silver
+    silver_record_id = Column(Integer)
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<WeatherAnalytics({self.city}, {self.timestamp}: {self.temperature}°C, hot_clear={self.is_hot_clear_day})>"
+    
+class WeatherReportingMart(Base):
+    """
+    Reporting Mart: Pre-aggregated dashboard data.
+    
+    Optimized for PowerBI queries.
+    Updated daily from Gold layer.
+    """
+    __tablename__ = "weather_reporting"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    city = Column(String, index=True)
+    date = Column(Date, index=True)
+    
+    # Dashboard metrics (simplified from Gold)
+    max_temperature = Column(DECIMAL(5,2))
+    min_temperature = Column(DECIMAL(5,2))
+    avg_wind_speed = Column(DECIMAL(5,2))
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<WeatherReportingMart({self.city}, {self.date}: {self.min_temperature}-{self.max_temperature}°C)>"
