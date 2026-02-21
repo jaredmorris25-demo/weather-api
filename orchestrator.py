@@ -4,7 +4,7 @@ Transformation Orchestrator
 Runs scheduled transformations across the medallion architecture:
 - Bronze → Silver: Every hour
 - Silver → Gold: Daily at 2am
-- Gold → Analytics/Reporting: Daily at 2:05am
+- Gold → Analytics/Reporting: Daily at 2:10am
 
 In production, this would be:
 - Databricks Jobs (scheduled notebooks)
@@ -110,14 +110,14 @@ def main():
     logger.info(f"📅 Environment: {ENV}")
     logger.info(f"📅 Bronze → Silver: Every hour")
     logger.info(f"📅 Silver → Gold: Daily at 2:00 AM")
-    logger.info(f"📅 Gold → Analytics/Reporting: Daily at 2:05 AM")
+    logger.info(f"📅 Gold → Analytics/Reporting: Daily at 2:10 AM")
     logger.info("\nPress Ctrl+C to stop\n")
     
     print("🚀 Transformation Orchestrator Started")
     print(f"📅 Environment: {ENV}")
     print(f"📅 Bronze → Silver: Every hour")
     print(f"📅 Silver → Gold: Daily at 2:00 AM")
-    print(f"📅 Gold → Analytics/Reporting: Daily at 2:05 AM")
+    print(f"📅 Gold → Analytics/Reporting: Daily at 2:10 AM")
     print("\nPress Ctrl+C to stop\n")
     
     # Run Bronze → Silver immediately on startup
