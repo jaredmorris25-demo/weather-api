@@ -15,7 +15,7 @@ But for learning, we're using Python's schedule library to simulate the scheduli
 import schedule
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from config import get_config
 
@@ -128,6 +128,7 @@ def fetch_all_cities():
         response = requests.post(log_url, params=log_data)
         response.raise_for_status()
         print(f"✅ Batch run logged to database")
+        print(f'The next run will be at {datetime.now() + timedelta(minutes=FETCH_INTERVAL_MINUTES)}')
         logger.info("Batch logged to database successfully")
         
     except Exception as e:
