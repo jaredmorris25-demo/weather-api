@@ -1,28 +1,19 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .models import Base
-import sys
-import os
 
-# Add parent directory to path so we can import config
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import DATABASE_URL
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Use environment-specific database
-engine = create_engine(DATABASE_URL, echo=True)
+# Fallback for local dev if no env var set
+if not DATABASE_URL:
+    from config import get_settings
+    settings = get_settings()
+    DATABASE_URL = f"sqlite:///{settings.db_path}"
 
-Base.metadata.create_all(bind=engine)
+# Azure SQL needs a different connect_args than SQLite
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    """
-    Dependency function to get a database session.
-    This is used in our FastAPI routes to interact with the database.
-    It ensures that we create a new session for each request and close it after we're done.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
