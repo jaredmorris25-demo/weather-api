@@ -32,8 +32,8 @@ stages:
         /usr/bin/python3 -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
       env:
-        WEATHER_API_KEY: 'test-dummy-key'
-        BASE_URL: 'http://test-dummy-url'
+        OPENWEATHER_API_KEY: 'test-dummy-key'
+        OPENWEATHER_BASE_URL: 'http://test-dummy-url'
         APP_ENV: 'dev'
 
 # ============================================================
