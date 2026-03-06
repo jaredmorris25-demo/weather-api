@@ -29,7 +29,7 @@ stages:
         echo "--- Testing Import ---"
         usr/bin/python3 -c "from app.main import app; print('App imports OK')"
         echo "--- Running Tests ---"
-        usr/bin/python3 -m pytest tests/ --tb=short -v
+        /usr/bin/python3 -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
 
 # ============================================================
