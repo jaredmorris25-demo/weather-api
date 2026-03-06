@@ -106,24 +106,3 @@ stages:
               appName: 'weather-api-jm1535'
               package: '$(System.DefaultWorkingDirectory)'
               startUpCommand: 'bash startup.sh'
-Save and exit, then create the tests folder:
-bashmkdir tests
-touch tests/__init__.py
-nano tests/test_api.py
-Paste this in:
-pythonfrom fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-def test_health_check():
-    response = client.get("/")
-    assert response.status_code == 200
-
-def test_weather_history_empty():
-    response = client.get("/weather/history/TestCityThatDoesNotExist")
-    assert response.status_code == 200
-
-def test_fetch_weather_invalid_city():
-    response = client.post("/weather/fetch/zzznonsensecity999")
-    assert response.status_code in [400, 404, 422]
