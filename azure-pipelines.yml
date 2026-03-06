@@ -31,6 +31,10 @@ stages:
         echo "--- Running Tests ---"
         /usr/bin/python3 -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
+      env:
+        WEATHER_API_KEY: 'test-dummy-key'
+        BASE_URL: 'http://test-dummy-url'
+        APP_ENV: 'dev'
 
 # ============================================================
 # STAGE 2: Deploy to DEV
