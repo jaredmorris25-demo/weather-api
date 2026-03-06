@@ -32,3 +32,6 @@ def get_config():
 DATABASE_URL = get_config()["database_url"]
 API_PORT = get_config()["api_port"]
 LOG_FILE = get_config()["log_file"]
+
+def get_settings():
+    return get_config()
