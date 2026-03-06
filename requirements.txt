@@ -20,4 +20,4 @@ uvicorn==0.24.0
 schedule==1.2.0
 gunicorn==20.1.0
 pyodbc==4.0.34
-sqlalchemy==2.0.23
+sqlalchemy==2.0.23gunicorn
