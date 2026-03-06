@@ -35,8 +35,8 @@ LOG_FILE = get_config()["log_file"]
 
 class Settings:
     def __init__(self, config):
-        self.db_path = config["database_url"].replace("sqlite:///./", "")
         self.database_url = config["database_url"]
+        self.db_path = self.database_url.replace("sqlite:///./", "")
         self.api_port = config["api_port"]
         self.log_file = config["log_file"]
 
