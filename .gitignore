@@ -26,3 +26,6 @@ env/
 scheduler*.log
 orchestrator*.log
 *.log
+
+# Linux Containers
+Dockerfile
