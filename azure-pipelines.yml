@@ -22,8 +22,8 @@ stages:
     - script: |
         python3 --version
         python3 -m pip install --upgrade pip
-        pip3 install -r requirements.txt
-        pip3 install pytest pytest-cov
+        python3 -m install -r requirements.txt
+        python3 -m install pytest pytest-cov
       displayName: 'Install dependencies'
 
     - script: |
@@ -31,7 +31,7 @@ stages:
       displayName: 'Smoke test: app imports'
 
     - script: |
-        pytest tests/ --tb=short -v
+        python3 -m pytest tests/ --tb=short -v
       displayName: 'Run unit tests'
 
 # ============================================================
