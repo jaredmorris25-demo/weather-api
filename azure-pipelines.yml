@@ -24,6 +24,10 @@ stages:
         antenv/bin/pip install --upgrade pip
         antenv/bin/pip install -r requirements.txt
         antenv/bin/pip install pytest pytest-cov
+        echo "--- Installed packages ---"
+        antenv/bin/pip list
+        echo "--- requirements.txt contents ---"
+        cat requirements.txt
         echo "--- Running Tests ---"
         antenv/bin/python -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
