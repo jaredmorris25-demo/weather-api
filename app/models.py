@@ -44,7 +44,7 @@ class BatchLog(Base):
     cities_attempted = Column(Integer)       # How many cities we tried
     cities_successful = Column(Integer)      # How many succeeded
     cities_failed = Column(Integer)          # How many failed
-    error_message = Column(String, nullable=True)  # Any errors encountered
+    error_message = Column(String(255), nullable=True)  # Any errors encountered
     duration_seconds = Column(Float)         # How long the batch took
 
     def __repr__(self):
@@ -65,12 +65,12 @@ class WeatherRecordSilver(Base):
     __tablename__ = "weather_records_silver"
     
     id = Column(Integer, primary_key=True, index=True)
-    city = Column(String, index=True)
-    country = Column(String)
+    city = Column(String(100), index=True)
+    country = Column(String(2))
     temperature = Column(Float)
     feels_like = Column(Float)
     humidity = Column(Integer)
-    description = Column(String)
+    description = Column(String(255))
     wind_speed = Column(Float)
     wind_direction = Column(Integer)
     pressure = Column(Integer)
@@ -80,8 +80,8 @@ class WeatherRecordSilver(Base):
     timestamp = Column(DateTime, index=True)           # When this reading is for
     processed_at = Column(DateTime, default=datetime.utcnow)  # When we created this record
     bronze_record_id = Column(Integer)                 # Link back to bronze source
-    data_quality_flag = Column(String)                 # "valid", "suspect", "invalid"
-    data_quality_notes = Column(String, nullable=True) # Why it was flagged
+    data_quality_flag = Column(String(50))                 # "valid", "suspect", "invalid"
+    data_quality_notes = Column(String(255), nullable=True) # Why it was flagged
     
     def __repr__(self):
         return f"<WeatherRecordSilver(city={self.city}, temp={self.temperature}°C, quality={self.data_quality_flag})>"
@@ -101,11 +101,11 @@ class TransformationLog(Base):
     __tablename__ = "transformation_logs"
     
     id = Column(Integer, primary_key=True, index=True)
-    transformation_name = Column(String, index=True)  # e.g., "bronze_to_silver"
+    transformation_name = Column(String(100), index=True)  # e.g., "bronze_to_silver"
     last_processed_timestamp = Column(DateTime)       # Latest Bronze timestamp we processed
     run_timestamp = Column(DateTime, default=datetime.utcnow)  # When this transform ran
     records_processed = Column(Integer)               # How many records created
-    status = Column(String)                           # "success" or "failed"
+    status = Column(String(50))                           # "success" or "failed"
     
     def __repr__(self):
         return f"<TransformationLog({self.transformation_name} @ {self.run_timestamp}: {self.status})>"
@@ -120,8 +120,8 @@ class WeatherDailyGold(Base):
     __tablename__ = "weather_daily_gold"
     
     id = Column(Integer, primary_key=True, index=True)
-    city = Column(String, index=True)
-    country = Column(String)
+    city = Column(String(100), index=True)
+    country = Column(String(2))
     date = Column(Date, index=True)
     
     # Temperature aggregations
@@ -138,7 +138,7 @@ class WeatherDailyGold(Base):
     avg_visibility = Column(DECIMAL(7,2))
     
     # Most common weather condition for the day
-    most_common_description = Column(String)
+    most_common_description = Column(String(255))
     
     # Data quality
     total_readings = Column(Integer)
@@ -160,15 +160,15 @@ class WeatherAnalyticsLayer(Base):
     __tablename__ = "weather_analytics_layer"
     
     id = Column(Integer, primary_key=True, index=True)
-    city = Column(String, index=True)
-    country = Column(String)
+    city = Column(String(100), index=True)
+    country = Column(String(2))
     timestamp = Column(DateTime, index=True)
     
     # Core measurements
     temperature = Column(Float)
     humidity = Column(Integer)
     wind_speed = Column(Float)
-    description = Column(String)
+    description = Column(String(255))
     
     # Analytical flags
     is_hot_clear_day = Column(Boolean)  # temp > 30 AND clear sky
@@ -192,7 +192,7 @@ class WeatherReportingMart(Base):
     __tablename__ = "weather_reporting"
     
     id = Column(Integer, primary_key=True, index=True)
-    city = Column(String, index=True)
+    city = Column(String(100), index=True)
     date = Column(Date, index=True)
     
     # Dashboard metrics (simplified from Gold)
