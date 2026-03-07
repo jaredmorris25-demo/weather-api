@@ -9,10 +9,23 @@ from .weather_client import WeatherClient
 
 from .models import BatchLog
 
+from .database import engine
+from .models import Base
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    Base.metadata.create_all(bind=engine)
+    yield
+    # Shutdown (nothing needed)
+
 app = FastAPI(
-    title="Weather API", 
+    title="Weather API",
     description="A simple API to fetch and store weather data for cities.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 weather_client = WeatherClient()
 
