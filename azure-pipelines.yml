@@ -31,7 +31,7 @@ stages:
         echo "--- Running Tests ---"
         /usr/bin/python3 -m pytest tests/ --tb=short -v
         echo "--- Building venv for deployment ---"
-        /usr/bin/python3.12 -m venv antenv
+        /usr/bin/python3 -m venv antenv
         antenv/bin/pip install --upgrade pip
         antenv/bin/pip install -r requirements.txt
       displayName: 'Install and Test'
