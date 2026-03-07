@@ -38,8 +38,14 @@ stages:
 
     - script: |
         cd $(System.DefaultWorkingDirectory)
-        zip -r $(Build.ArtifactStagingDirectory)/app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
-      displayName: 'Zip package'
+        tar -czf $(Build.ArtifactStagingDirectory)/app.tar.gz \
+          --exclude='.git' \
+          --exclude='__pycache__' \
+          --exclude='*.pyc' \
+          --exclude='*.db' \
+          --exclude='*.log' \
+          .
+      displayName: 'Package app'
 
     - task: PublishBuildArtifacts@1
       inputs:
