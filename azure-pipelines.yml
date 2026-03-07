@@ -22,21 +22,26 @@ stages:
     - script: |
         /usr/bin/python3 -m venv antenv
         source antenv/bin/activate
-        /usr/bin/python3 --version
-        /usr/bin/python3 -m pip install --upgrade pip
-        /usr/bin/python3 -m pip install -r requirements.txt
-        /usr/bin/python3 -m pip install pytest pytest-cov
-        echo "--- Installed Packages ---"
-        /usr/bin/python3 -m pip list
-        echo "--- Testing Import ---"
-        /usr/bin/python3 -c "from app.main import app; print('App imports OK')"
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
         echo "--- Running Tests ---"
-        /usr/bin/python3 -m pytest tests/ --tb=short -v
+        python -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
       env:
         OPENWEATHER_API_KEY: 'test-dummy-key'
         OPENWEATHER_BASE_URL: 'http://test-dummy-url'
         APP_ENV: 'dev'
+
+    - script: |
+        zip -r $(Build.ArtifactStagingDirectory)/app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
+      displayName: 'Zip package with venv'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+      displayName: 'Publish artifact'
 
 # ============================================================
 # STAGE 2: Deploy to DEV
@@ -53,19 +58,20 @@ stages:
       runOnce:
         deploy:
           steps:
-          - checkout: self
-
-          - script: |
-              cd $(System.DefaultWorkingDirectory)
-              zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
-            displayName: 'Zip package'
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+            displayName: 'Download artifact'
 
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.DefaultWorkingDirectory)/app.zip'
+              package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
@@ -83,19 +89,20 @@ stages:
       runOnce:
         deploy:
           steps:
-          - checkout: self
-
-          - script: |
-              cd $(System.DefaultWorkingDirectory)
-              zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
-            displayName: 'Zip package'
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+            displayName: 'Download artifact'
 
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.DefaultWorkingDirectory)/app.zip'
+              package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
@@ -113,17 +120,18 @@ stages:
       runOnce:
         deploy:
           steps:
-          - checkout: self
-
-          - script: |
-              cd $(System.DefaultWorkingDirectory)
-              zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
-            displayName: 'Zip package'
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+            displayName: 'Download artifact'
 
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.DefaultWorkingDirectory)/app.zip'
+              package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
