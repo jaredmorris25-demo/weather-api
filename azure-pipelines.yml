@@ -20,13 +20,14 @@ stages:
     steps:
 
     - script: |
+        rm -rf antenv
         /usr/bin/python3 -m venv antenv
         antenv/bin/pip install --upgrade pip
         echo "--- Installing requirements ---"
-        antenv/bin/pip install -r requirements.txt --verbose
+        antenv/bin/pip install --no-cache-dir -r requirements.txt
         echo "--- Checking sqlalchemy specifically ---"
         antenv/bin/pip show sqlalchemy
-        antenv/bin/pip install pytest pytest-cov
+        antenv/bin/pip install --no-cache-dir pytest pytest-cov
         echo "--- Running Tests ---"
         antenv/bin/python -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
