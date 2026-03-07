@@ -37,7 +37,6 @@ stages:
         APP_ENV: 'dev'
 
     - script: |
-        sudo apt-get install -y zip
         cd $(System.DefaultWorkingDirectory)
         zip -r $(Build.ArtifactStagingDirectory)/app.zip . \
           -x "*.git*" \
