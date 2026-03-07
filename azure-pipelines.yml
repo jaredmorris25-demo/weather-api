@@ -37,14 +37,14 @@ stages:
         APP_ENV: 'dev'
 
     - script: |
+        sudo apt-get install -y zip
         cd $(System.DefaultWorkingDirectory)
-        tar -czf $(Build.ArtifactStagingDirectory)/app.tar.gz \
-          --exclude='.git' \
-          --exclude='__pycache__' \
-          --exclude='*.pyc' \
-          --exclude='*.db' \
-          --exclude='*.log' \
-          .
+        zip -r $(Build.ArtifactStagingDirectory)/app.zip . \
+          -x "*.git*" \
+          -x "__pycache__/*" \
+          -x "*.pyc" \
+          -x "*.db" \
+          -x "*.log"
       displayName: 'Package app'
 
     - task: PublishBuildArtifacts@1
@@ -81,7 +81,7 @@ stages:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.ArtifactsDirectory)/drop/app.tar.gz'
+              package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
@@ -112,7 +112,7 @@ stages:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.ArtifactsDirectory)/drop/app.tar.gz'
+              package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
@@ -143,5 +143,5 @@ stages:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.ArtifactsDirectory)/drop/app.tar.gz'
+              package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
