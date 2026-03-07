@@ -44,6 +44,8 @@ stages:
           -x "*.pyc" \
           -x "*.db" \
           -x "*.log"
+        echo "--- Zip contents (top level) ---"
+        unzip -l $(Build.ArtifactStagingDirectory)/app.zip | head -30
       displayName: 'Package app'
 
     - task: PublishBuildArtifacts@1
