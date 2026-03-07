@@ -1,5 +1,4 @@
-Here's the complete azure-pipelines.yml combining the working Build stage from 224b014 with the updated Deploy stages we built today:
-yamltrigger:
+trigger:
   branches:
     include:
       - main
