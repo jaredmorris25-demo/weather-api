@@ -81,7 +81,7 @@ stages:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.ArtifactsDirectory)/drop/app.zip'
+              package: '$(System.ArtifactsDirectory)/drop/app.tar.gz'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
@@ -112,7 +112,7 @@ stages:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.ArtifactsDirectory)/drop/app.zip'
+              package: '$(System.ArtifactsDirectory)/drop/app.tar.gz'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
@@ -143,5 +143,5 @@ stages:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.ArtifactsDirectory)/drop/app.zip'
+              package: '$(System.ArtifactsDirectory)/drop/app.tar.gz'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
