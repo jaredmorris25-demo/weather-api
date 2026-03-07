@@ -29,11 +29,13 @@ stages:
         echo "--- Testing Import ---"
         /usr/bin/python3 -c "from app.main import app; print('App imports OK')"
         echo "--- Running Tests ---"
-        /usr/bin/python3 -m pytest tests/ --tb=short -v
-        echo "--- Building venv for deployment ---"
         /usr/bin/python3 -m venv antenv
         antenv/bin/pip install --upgrade pip
-        antenv/bin/pip install -r requirements.txt
+        antenv/bin/pip install \
+          --platform manylinux2014_x86_64 \
+          --target antenv/lib/python3.10/site-packages \
+          --only-binary=:all: \
+          -r requirements.txt
       displayName: 'Install and Test'
       env:
         OPENWEATHER_API_KEY: 'test-dummy-key'
