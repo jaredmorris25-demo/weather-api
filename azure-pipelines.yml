@@ -21,12 +21,11 @@ stages:
 
     - script: |
         /usr/bin/python3 -m venv antenv
-        source antenv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
+        antenv/bin/pip install --upgrade pip
+        antenv/bin/pip install -r requirements.txt
+        antenv/bin/pip install pytest pytest-cov
         echo "--- Running Tests ---"
-        python -m pytest tests/ --tb=short -v
+        antenv/bin/python -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
       env:
         OPENWEATHER_API_KEY: 'test-dummy-key'
