@@ -16,10 +16,7 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    Base.metadata.create_all(bind=engine)
-    yield
-    # Shutdown (nothing needed)
+    yield  # Tables already created via migration
 
 app = FastAPI(
     title="Weather API",
