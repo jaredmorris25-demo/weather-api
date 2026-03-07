@@ -1,4 +1,5 @@
-trigger:
+Here's the complete azure-pipelines.yml combining the working Build stage from 224b014 with the updated Deploy stages we built today:
+yamltrigger:
   branches:
     include:
       - main
@@ -20,16 +21,16 @@ stages:
     steps:
 
     - script: |
-        rm -rf antenv
-        /usr/bin/python3 -m venv antenv
-        antenv/bin/pip install --upgrade pip
-        echo "--- Installing requirements ---"
-        antenv/bin/pip install --no-cache-dir -r requirements.txt
-        echo "--- Checking sqlalchemy specifically ---"
-        antenv/bin/pip show sqlalchemy
-        antenv/bin/pip install --no-cache-dir pytest pytest-cov
+        /usr/bin/python3 --version
+        /usr/bin/python3 -m pip install --upgrade pip
+        /usr/bin/python3 -m pip install -r requirements.txt
+        /usr/bin/python3 -m pip install pytest pytest-cov
+        echo "--- Installed Packages ---"
+        /usr/bin/python3 -m pip list
+        echo "--- Testing Import ---"
+        /usr/bin/python3 -c "from app.main import app; print('App imports OK')"
         echo "--- Running Tests ---"
-        antenv/bin/python -m pytest tests/ --tb=short -v
+        /usr/bin/python3 -m pytest tests/ --tb=short -v
       displayName: 'Install and Test'
       env:
         OPENWEATHER_API_KEY: 'test-dummy-key'
@@ -37,8 +38,9 @@ stages:
         APP_ENV: 'dev'
 
     - script: |
+        cd $(System.DefaultWorkingDirectory)
         zip -r $(Build.ArtifactStagingDirectory)/app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
-      displayName: 'Zip package with venv'
+      displayName: 'Zip package'
 
     - task: PublishBuildArtifacts@1
       inputs:
