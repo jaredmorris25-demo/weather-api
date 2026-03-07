@@ -14,7 +14,15 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    engine = create_engine(DATABASE_URL)
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"timeout": 30},
+        pool_pre_ping=True,     # Test connection before use (Azure drops idle connections)
+        pool_recycle=1800,      # Recycle connections every 30 mins
+        pool_size=5,            # Max persistent connections
+        max_overflow=10,        # Extra connections allowed under load
+        echo=False
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

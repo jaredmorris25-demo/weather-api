@@ -20,6 +20,8 @@ stages:
     steps:
 
     - script: |
+        /usr/bin/python3 -m venv antenv
+        source antenv/bin/activate
         /usr/bin/python3 --version
         /usr/bin/python3 -m pip install --upgrade pip
         /usr/bin/python3 -m pip install -r requirements.txt
@@ -51,13 +53,20 @@ stages:
       runOnce:
         deploy:
           steps:
+          - checkout: self
+
+          - script: |
+              cd $(System.DefaultWorkingDirectory)
+              zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
+            displayName: 'Zip package'
+
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.DefaultWorkingDirectory)'
-              startUpCommand: 'bash startup.sh'
+              package: '$(System.DefaultWorkingDirectory)/app.zip'
+              startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
 # STAGE 3: Deploy to UAT
@@ -74,13 +83,20 @@ stages:
       runOnce:
         deploy:
           steps:
+          - checkout: self
+
+          - script: |
+              cd $(System.DefaultWorkingDirectory)
+              zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
+            displayName: 'Zip package'
+
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.DefaultWorkingDirectory)'
-              startUpCommand: 'bash startup.sh'
+              package: '$(System.DefaultWorkingDirectory)/app.zip'
+              startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
 # ============================================================
 # STAGE 4: Deploy to PROD (manual approval required)
@@ -97,10 +113,17 @@ stages:
       runOnce:
         deploy:
           steps:
+          - checkout: self
+
+          - script: |
+              cd $(System.DefaultWorkingDirectory)
+              zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc" -x "*.db" -x "*.log"
+            displayName: 'Zip package'
+
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
               appName: 'weather-api-jm1535'
-              package: '$(System.DefaultWorkingDirectory)'
-              startUpCommand: 'bash startup.sh'
+              package: '$(System.DefaultWorkingDirectory)/app.zip'
+              startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
