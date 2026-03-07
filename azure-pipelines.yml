@@ -21,9 +21,9 @@ stages:
 
     - script: |
         /usr/bin/python3 --version
-        /usr/bin/python3 -m pip install --upgrade pip
-        /usr/bin/python3 -m pip install -r requirements.txt
-        /usr/bin/python3 -m pip install pytest pytest-cov
+        /usr/bin/python3 -m pip install --user --upgrade pip
+        /usr/bin/python3 -m pip install --user -r requirements.txt
+        /usr/bin/python3 -m pip install --user pytest pytest-cov
         echo "--- Installed Packages ---"
         /usr/bin/python3 -m pip list
         echo "--- Testing Import ---"
