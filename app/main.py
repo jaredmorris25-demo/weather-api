@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import List
 from datetime import datetime
 
@@ -13,6 +14,7 @@ from .database import engine
 from .models import Base
 
 from contextlib import asynccontextmanager
+import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -262,4 +264,28 @@ def get_batch_history(limit: int = 10, db: Session = Depends(get_db)):
             }
             for log in logs
         ]
+    }
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    # Check database connectivity
+    try:
+        db.execute(text("SELECT 1"))
+        db_status = "healthy"
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+
+    # Check OpenWeatherMap API key
+    api_key = os.environ.get("OPENWEATHER_API_KEY")
+    api_status = "configured" if api_key else "missing"
+
+    overall = "healthy" if db_status == "healthy" and api_status == "configured" else "unhealthy"
+
+    return {
+        "status": overall,
+        "version": "1.0.0",
+        "checks": {
+            "database": db_status,
+            "openweathermap_api_key": api_status,
+        }
     }
