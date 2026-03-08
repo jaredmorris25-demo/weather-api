@@ -93,7 +93,7 @@ stages:
 
           - script: |
               echo "Waiting for app to start..."
-              sleep 30
+              sleep 60
               STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-jm1535.azurewebsites.net/health)
               echo "Health check status: $STATUS"
               if [ "$STATUS" != "200" ]; then
@@ -136,7 +136,7 @@ stages:
 
           - script: |
               echo "Waiting for app to start..."
-              sleep 30
+              sleep 60
               STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-jm1535.azurewebsites.net/health)
               echo "Health check status: $STATUS"
               if [ "$STATUS" != "200" ]; then
@@ -179,7 +179,7 @@ stages:
 
           - script: |
               echo "Waiting for app to start..."
-              sleep 30
+              sleep 60
               STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-jm1535.azurewebsites.net/health)
               echo "Health check status: $STATUS"
               if [ "$STATUS" != "200" ]; then
