@@ -1,17 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import text
-from typing import List
+from sqlalchemy import text, desc, func
+from typing import List, Optional
 from datetime import datetime
 
-from .database import get_db
-from .models import WeatherRecord
+from .database import get_db, engine
+from .models import Base, WeatherRecord, WeatherRecordSilver, WeatherDailyGold, BatchLog
 from .weather_client import WeatherClient
-
-from .models import BatchLog
-
-from .database import engine
-from .models import Base
+from pydantic import BaseModel
 
 from contextlib import asynccontextmanager
 import os
@@ -27,6 +23,59 @@ app = FastAPI(
     lifespan=lifespan
 )
 weather_client = WeatherClient()
+
+# ── Pydantic Response Models ─────────────────────────────────────────────────
+# These define what the API *returns* — separate from DB models.
+# Benefit: DB schema can evolve without breaking API consumers.
+
+class WeatherResponse(BaseModel):
+    id: int
+    city: str
+    country: Optional[str]
+    temperature: float
+    feels_like: Optional[float]
+    humidity: Optional[int]
+    wind_speed: Optional[float]
+    description: Optional[str]
+    timestamp: str
+
+    class Config:
+        from_attributes = True  # Allows SQLAlchemy model → Pydantic conversion
+
+
+class SilverResponse(BaseModel):
+    id: int
+    city: str
+    country: Optional[str]
+    temperature: Optional[float]
+    humidity: Optional[int]
+    wind_speed: Optional[float]
+    description: Optional[str]
+    data_quality_flag: Optional[str]
+    data_quality_notes: Optional[str]
+    timestamp: str
+    processed_at: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class GoldResponse(BaseModel):
+    id: int
+    city: str
+    country: Optional[str]
+    date: str
+    avg_temperature: Optional[float]
+    max_temperature: Optional[float]
+    min_temperature: Optional[float]
+    avg_humidity: Optional[int]
+    avg_wind_speed: Optional[float]
+    most_common_description: Optional[str]
+    total_readings: Optional[int]
+    valid_readings: Optional[int]
+
+    class Config:
+        from_attributes = True
 
 @app.get("/")
 def read_root():
@@ -264,6 +313,168 @@ def get_batch_history(limit: int = 10, db: Session = Depends(get_db)):
             }
             for log in logs
         ]
+    }
+
+# ── Phase 14: GET Endpoints ──────────────────────────────────────────────────
+
+@app.get("/weather/records", response_model=List[WeatherResponse])
+def get_weather_records(
+    city: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """
+    Query Bronze layer with optional city filter and pagination.
+    
+    - city: Filter by city name. Omit for all cities.
+    - limit/offset: Pagination. e.g. limit=100&offset=100 for page 2.
+    """
+    query = db.query(WeatherRecord).order_by(desc(WeatherRecord.timestamp))
+    if city:
+        query = query.filter(WeatherRecord.city == city)
+
+    return [
+        WeatherResponse(
+            id=r.id, city=r.city, country=r.country,
+            temperature=r.temperature, feels_like=r.feels_like,
+            humidity=r.humidity, wind_speed=r.wind_speed,
+            description=r.description, timestamp=str(r.timestamp)
+        )
+        for r in query.offset(offset).limit(limit).all()
+    ]
+
+
+@app.get("/weather/records/latest", response_model=List[WeatherResponse])
+def get_all_latest(db: Session = Depends(get_db)):
+    """
+    Most recent Bronze record for each city.
+    
+    Uses a subquery to find max timestamp per city, then joins back
+    to get the full row — avoids pulling all rows into Python.
+    """
+    subquery = (
+        db.query(
+            WeatherRecord.city,
+            func.max(WeatherRecord.timestamp).label("max_ts")
+        )
+        .group_by(WeatherRecord.city)
+        .subquery()
+    )
+    records = (
+        db.query(WeatherRecord)
+        .join(
+            subquery,
+            (WeatherRecord.city == subquery.c.city) &
+            (WeatherRecord.timestamp == subquery.c.max_ts)
+        )
+        .order_by(WeatherRecord.city)
+        .all()
+    )
+    return [
+        WeatherResponse(
+            id=r.id, city=r.city, country=r.country,
+            temperature=r.temperature, feels_like=r.feels_like,
+            humidity=r.humidity, wind_speed=r.wind_speed,
+            description=r.description, timestamp=str(r.timestamp)
+        )
+        for r in records
+    ]
+
+
+@app.get("/weather/silver", response_model=List[SilverResponse])
+def get_silver_records(
+    city: Optional[str] = None,
+    quality: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """
+    Query Silver (cleaned) layer.
+    
+    - quality: Filter by data_quality_flag — valid | suspect | invalid
+    """
+    query = db.query(WeatherRecordSilver).order_by(desc(WeatherRecordSilver.timestamp))
+    if city:
+        query = query.filter(WeatherRecordSilver.city == city)
+    if quality:
+        query = query.filter(WeatherRecordSilver.data_quality_flag == quality)
+
+    return [
+        SilverResponse(
+            id=r.id, city=r.city, country=r.country,
+            temperature=r.temperature, humidity=r.humidity,
+            wind_speed=r.wind_speed, description=r.description,
+            data_quality_flag=r.data_quality_flag,
+            data_quality_notes=r.data_quality_notes,
+            timestamp=str(r.timestamp),
+            processed_at=str(r.processed_at) if r.processed_at else None
+        )
+        for r in query.offset(offset).limit(limit).all()
+    ]
+
+
+@app.get("/weather/gold", response_model=List[GoldResponse])
+def get_gold_records(
+    city: Optional[str] = None,
+    limit: int = 30,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """
+    Query Gold (daily aggregated) layer.
+    
+    Note: DECIMAL columns from SQLAlchemy are cast to float for JSON serialisation.
+    Default limit 30 = roughly one month per city.
+    """
+    query = db.query(WeatherDailyGold).order_by(desc(WeatherDailyGold.date))
+    if city:
+        query = query.filter(WeatherDailyGold.city == city)
+
+    return [
+        GoldResponse(
+            id=r.id, city=r.city, country=r.country,
+            date=str(r.date),
+            # DECIMAL → float cast needed for JSON serialisation
+            avg_temperature=float(r.avg_temperature) if r.avg_temperature is not None else None,
+            max_temperature=float(r.max_temperature) if r.max_temperature is not None else None,
+            min_temperature=float(r.min_temperature) if r.min_temperature is not None else None,
+            avg_humidity=r.avg_humidity,
+            avg_wind_speed=float(r.avg_wind_speed) if r.avg_wind_speed is not None else None,
+            most_common_description=r.most_common_description,
+            total_readings=r.total_readings,
+            valid_readings=r.valid_readings
+        )
+        for r in query.offset(offset).limit(limit).all()
+    ]
+
+
+@app.get("/weather/summary")
+def get_summary(db: Session = Depends(get_db)):
+    """
+    Cross-layer record counts and data freshness per city.
+    Useful as a pipeline health / dashboard endpoint.
+    """
+    bronze_count = db.query(func.count(WeatherRecord.id)).scalar()
+    silver_count = db.query(func.count(WeatherRecordSilver.id)).scalar()
+    gold_count = db.query(func.count(WeatherDailyGold.id)).scalar()
+
+    latest_per_city = (
+        db.query(WeatherRecord.city, func.max(WeatherRecord.timestamp).label("latest"))
+        .group_by(WeatherRecord.city)
+        .all()
+    )
+
+    return {
+        "record_counts": {
+            "bronze": bronze_count,
+            "silver": silver_count,
+            "gold": gold_count
+        },
+        "latest_ingestion_per_city": {
+            row.city: str(row.latest) for row in latest_per_city
+        }
     }
 
 @app.get("/health")
