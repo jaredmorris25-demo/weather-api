@@ -7,8 +7,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sqlalchemy import func
-from datetime import datetime, timedelta, date
+from sqlalchemy import Date, func
+from datetime import datetime, timedelta, date, timezone
 from collections import Counter
 from app.database import SessionLocal
 from app.models import WeatherRecordSilver, WeatherDailyGold
@@ -30,13 +30,14 @@ def transform_silver_to_gold(days_back: int = 7):
         print("="*70)
         
         # Calculate date range
-        end_date = datetime.utcnow().date()
+        from datetime import timezone
+        end_date = datetime.now(timezone.utc).date()
         start_date = end_date - timedelta(days=days_back)
         
         # Get Silver records in date range
         silver_records = db.query(WeatherRecordSilver)\
-            .filter(func.date(WeatherRecordSilver.timestamp) >= start_date)\
-            .filter(func.date(WeatherRecordSilver.timestamp) <= end_date)\
+            .filter(func.cast(WeatherRecordSilver.timestamp, Date) >= start_date) \
+            .filter(func.cast(WeatherRecordSilver.timestamp, Date) <= end_date) \
             .all()
         
         if not silver_records:
