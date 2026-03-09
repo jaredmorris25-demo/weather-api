@@ -7,6 +7,7 @@ trigger:
 pool:
   name: 'mac-local'
 
+
 stages:
 
 # ============================================================
@@ -23,18 +24,17 @@ stages:
         /usr/bin/python3 --version
         /usr/bin/python3 -m pip install --user --upgrade pip
         /usr/bin/python3 -m pip install --user -r requirements.txt
-        /usr/bin/python3 -m pip install --user pytest pytest-cov
-        echo "--- Installed Packages ---"
-        /usr/bin/python3 -m pip list
+        /usr/bin/python3 -m pip install --user pytest
         echo "--- Testing Import ---"
         /usr/bin/python3 -c "from app.main import app; print('App imports OK')"
-        echo "--- Running Tests ---"
+        echo "--- Cross-compiling for x86_64 Azure deployment ---"
         /usr/bin/python3 -m venv antenv
         antenv/bin/pip install --upgrade pip
         antenv/bin/pip install \
           --platform manylinux2014_x86_64 \
           --target antenv/lib/python3.10/site-packages \
           --only-binary=:all: \
+          --python-version 3.10 \
           -r requirements.txt
       displayName: 'Install and Test'
       env:
