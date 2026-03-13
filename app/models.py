@@ -25,10 +25,11 @@ class WeatherRecord(Base):
     pressure = Column(Integer)        # NEW FIELD
     visibility = Column(Integer)      # NEW FIELD
     timestamp = Column(DateTime, default=datetime.utcnow)   # Timestamp of when the data was recorded
+    weather_category = Column(String(10), nullable=True)  # hot/warm/cool/cold
 
     def __repr__(self):
-        return f"<WeatherRecord(city_name='{self.city}', temperature={self.temperature}, humidity={self.humidity}, description='{self.description}', wind_speed={self.wind_speed}, timestamp='{self.timestamp}')>"
-    
+        return f"<WeatherRecord(city_name='{self.city}', temperature={self.temperature}, humidity={self.humidity}, description='{self.description}', wind_speed={self.wind_speed}, timestamp='{self.timestamp}', weather_category='{self.weather_category}')>"
+
 class BatchLog(Base):
     """
     Tracks scheduler batch runs - successes, failures, timing.

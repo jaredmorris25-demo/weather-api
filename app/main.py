@@ -84,8 +84,8 @@ def read_root():
             "endpoints": {
                 "/weather/{city}": "Get current weather for a city",
                 "/weather/records": "Get all stored weather records"
-            }
     }
+            }
 
 @app.post("/weather/fetch/{city}")
 def fetch_weather(city: str, country_code: str = "AU", db: Session = Depends(get_db)):
@@ -110,6 +110,17 @@ def fetch_weather(city: str, country_code: str = "AU", db: Session = Depends(get
     if not weather_data:
         raise HTTPException(status_code=404, detail="Weather data not found for the specified city")
 
+    # Determine weather category based on temperature
+    temp = weather_data['main']['temp']
+    if temp >= 30:
+        category = "hot"
+    elif temp >= 20:
+        category = "warm"
+    elif temp >= 10:
+        category = "cool"
+    else:
+        category = "cold"
+
     # Extract relevant fields from API response
     # This is basic transformation - in real pipeplines you'd do much more here
     record = WeatherRecord(
@@ -122,7 +133,8 @@ def fetch_weather(city: str, country_code: str = "AU", db: Session = Depends(get
         wind_speed=weather_data['wind']['speed'],
         wind_direction=weather_data['wind']['deg'],
         pressure=weather_data["main"]["pressure"],
-        visibility=weather_data.get("visibility", 0)
+        visibility=weather_data.get("visibility", 0),
+        weather_category=category
     )
     
     # Store the record in the database
@@ -132,9 +144,10 @@ def fetch_weather(city: str, country_code: str = "AU", db: Session = Depends(get
     
     return {
     "message": f"Weather data for {record.city} stored successfully",
-    "record_id": record.id,
-    "temperature": record.temperature,
-    "description": record.description,
+        "record_id": record.id,
+        "temperature": record.temperature,
+        "description": record.description,
+        "weather_category": record.weather_category
 }
 
 @app.get("/weather/history/{city}")
