@@ -127,14 +127,18 @@ stages:
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
           - script: |
-              sleep 60
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-uat-jm1535.azurewebsites.net/health)
-              if [ "$STATUS" != "200" ]; then
-                echo "##[error]Health check failed: $STATUS"
-                exit 1
-              fi
-              echo "UAT health check passed"
-            displayName: 'Health check'
+              echo "Waiting for UAT to start..."
+              for i in {1..10}; do
+                STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-uat-jm1535.azurewebsites.net/health)
+                echo "Attempt $i: Status $STATUS"
+                if [ "$STATUS" = "200" ]; then
+                  echo "UAT health check passed"
+                  exit 0
+                fi
+                sleep 30
+              done
+              echo "##[error]UAT health check failed after 10 attempts"
+              exit 1
 
 # ── Stage 4: Deploy to PROD ───────────────────────────────────────────────
 - stage: DeployProd
