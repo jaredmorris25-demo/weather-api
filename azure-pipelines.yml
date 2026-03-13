@@ -66,10 +66,9 @@ stages:
 - stage: DeployDev
   displayName: 'Deploy to DEV'
   dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  condition: succeeded()        # runs on feature/* AND main
   jobs:
   - deployment: DeployToDev
-    displayName: 'Deploy to Dev App Service'
     environment: 'weather-api-dev'
     strategy:
       runOnce:
@@ -81,38 +80,32 @@ stages:
               downloadType: 'single'
               artifactName: 'drop'
               downloadPath: '$(System.ArtifactsDirectory)'
-            displayName: 'Download artifact'
 
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
-              appName: 'weather-api-jm1535'
+              appName: 'weather-api-dev-jm1535'
               package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
           - script: |
-              echo "Waiting for app to start..."
               sleep 60
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-jm1535.azurewebsites.net/health)
-              echo "Health check status: $STATUS"
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-dev-jm1535.azurewebsites.net/health)
               if [ "$STATUS" != "200" ]; then
-                echo "##[error]Health check failed with status $STATUS"
+                echo "##[error]Health check failed: $STATUS"
                 exit 1
               fi
-              echo "Health check passed"
+              echo "Dev health check passed"
             displayName: 'Health check'
 
-# ============================================================
-# STAGE 3: Deploy to UAT
-# ============================================================
+# ── Stage 3: Deploy to UAT ────────────────────────────────────────────────
 - stage: DeployUAT
   displayName: 'Deploy to UAT'
   dependsOn: DeployDev
-  condition: succeeded()
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - deployment: DeployToUAT
-    displayName: 'Deploy to UAT App Service'
     environment: 'weather-api-uat'
     strategy:
       runOnce:
@@ -124,38 +117,32 @@ stages:
               downloadType: 'single'
               artifactName: 'drop'
               downloadPath: '$(System.ArtifactsDirectory)'
-            displayName: 'Download artifact'
 
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'Azure-Service-Connection'
               appType: 'webAppLinux'
-              appName: 'weather-api-jm1535'
+              appName: 'weather-api-uat-jm1535'
               package: '$(System.ArtifactsDirectory)/drop/app.zip'
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
           - script: |
-              echo "Waiting for app to start..."
               sleep 60
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-jm1535.azurewebsites.net/health)
-              echo "Health check status: $STATUS"
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-uat-jm1535.azurewebsites.net/health)
               if [ "$STATUS" != "200" ]; then
-                echo "##[error]Health check failed with status $STATUS"
+                echo "##[error]Health check failed: $STATUS"
                 exit 1
               fi
-              echo "Health check passed"
+              echo "UAT health check passed"
             displayName: 'Health check'
 
-# ============================================================
-# STAGE 4: Deploy to PROD (manual approval required)
-# ============================================================
+# ── Stage 4: Deploy to PROD ───────────────────────────────────────────────
 - stage: DeployProd
   displayName: 'Deploy to PROD'
   dependsOn: DeployUAT
-  condition: succeeded()
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - deployment: DeployToProd
-    displayName: 'Deploy to Production App Service'
     environment: 'weather-api-prod'
     strategy:
       runOnce:
@@ -167,7 +154,6 @@ stages:
               downloadType: 'single'
               artifactName: 'drop'
               downloadPath: '$(System.ArtifactsDirectory)'
-            displayName: 'Download artifact'
 
           - task: AzureWebApp@1
             inputs:
@@ -178,13 +164,11 @@ stages:
               startUpCommand: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000'
 
           - script: |
-              echo "Waiting for app to start..."
               sleep 60
               STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://weather-api-jm1535.azurewebsites.net/health)
-              echo "Health check status: $STATUS"
               if [ "$STATUS" != "200" ]; then
-                echo "##[error]Health check failed with status $STATUS"
+                echo "##[error]Health check failed: $STATUS"
                 exit 1
               fi
-              echo "Health check passed"
+              echo "Prod health check passed"
             displayName: 'Health check'
